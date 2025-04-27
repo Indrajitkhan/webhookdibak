@@ -3,13 +3,13 @@ from flask import Blueprint, request, jsonify
 import json, uuid
 from functools import wraps
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(_file_))
 CustomersRecord = os.path.join(BASE_DIR, "customers.json")
 
 Token = os.getenv("Token")
 MyToken = os.getenv("MyToken")
 
-customerBp = Blueprint("customer", __name__)
+customerBp = Blueprint("customer", _name_)
 
 if not os.path.exists(CustomersRecord) or os.path.getsize(CustomersRecord) == 0:
     customers = []
@@ -18,9 +18,7 @@ else:
         customers = json.load(f)
 
 
-# INFO: --- Auth Decorator ---
-
-
+# --- Auth Decorator ---
 def require_token(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -32,7 +30,7 @@ def require_token(f):
     return decorated
 
 
-# INFO: --- Routes start here ---
+# --- Routes start here ---
 
 
 @customerBp.route("/")
@@ -72,7 +70,6 @@ def searchCustomer():
         customers = json.load(f)
 
     matched = []
-
     for c in customers:
         full_name = c["Name"].strip().lower()
         name_parts = full_name.split()
@@ -275,39 +272,28 @@ def deleteCustomer(customerId):
     return jsonify({"Status": "Deleted", "Id": customerId}), 200
 
 
-# INFO: --- Updated Webhook Handler ---
-
-
+# --- Updated Webhook Handler ---
 @customerBp.route("/webhook", methods=["GET", "POST"])
 def webhook():
-    MyToken = os.getenv("MyToken")
-
     if request.method == "GET":
+        VERIFY_TOKEN = "dibakar"  # Same token you gave in Meta Developer Console
         mode = request.args.get("hub.mode")
-        token = request.args.get("hub.MyToken")
+        token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
 
-        if mode == "subscribe" and token == MyToken:
+        if mode == "subscribe" and token == VERIFY_TOKEN:
             return challenge, 200
         else:
             return "Verification failed", 403
 
     elif request.method == "POST":
         auth = request.headers.get("Authorization")
-        if not auth or auth not in [Token, MyToken]:
+        if auth not in [Token, MyToken]:
             return jsonify({"Error": "Unauthorized access."}), 401
 
         data = request.json
-        message_body = None
-        try:
-            message_body = data["entry"][0]["changes"][0]["value"]["messages"][0][
-                "text"
-            ]["body"]
-        except (KeyError, IndexError, TypeError):
-            message_body = "No text found."
-
         reply = {
             "type": "text",
-            "text": f"Hey! Got your message: {message_body}",
+            "text": "Hey! Got your message: " + data.get("text", "No text found."),
         }
         return jsonify(reply), 200
