@@ -3,13 +3,13 @@ from flask import Blueprint, request, jsonify
 import json, uuid
 from functools import wraps
 
-BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CustomersRecord = os.path.join(BASE_DIR, "customers.json")
 
 Token = os.getenv("Token")
 MyToken = os.getenv("MyToken")
 
-customerBp = Blueprint("customer", _name_)
+customerBp = Blueprint("customer", __name__)
 
 if not os.path.exists(CustomersRecord) or os.path.getsize(CustomersRecord) == 0:
     customers = []
